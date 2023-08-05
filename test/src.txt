@@ -10,7 +10,6 @@ PRINT r2
 BRK /* foo bar */
 
 /*
-load r0 0x10 ; it always loads an u32
 copy r0 r1   ; it always copies the u32 value of r1 to r0
 write8 r0 r1 ; writes to the address stored in r0 a byte, truncated from r1
 write16 r0 r1 ; writes to the address stored in r0 a word, truncated from r1

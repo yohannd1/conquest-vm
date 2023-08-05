@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
 	fclose(fp);
 
 	myvm_Buf rom;
-	if (!myvm_asm_compile(&rom, myvm_BufConst_from(fbuf))) {
+	myvm_Asm asm = myvm_Asm_init(myvm_BufConst_from(fbuf));
+	if (!myvm_Asm_compile(&asm, &rom)) {
 		die("failed to compile to ROM");
 	}
 

@@ -57,7 +57,7 @@ bool myvm_VM_copyRom(myvm_VM *vm, myvm_BufConst rom) {
 
 bool myvm_VM_run(myvm_VM *vm) {
 	for (;;) {
-		uint32_t insptr = vm->registers[MYVM_R_INSPTR];
+		/* uint32_t insptr = vm->registers[MYVM_R_INSPTR]; */
 		uint8_t ins = getNextByte(vm);
 		/* logD("at #%x : ins #%x", insptr, ins); */
 
@@ -78,7 +78,7 @@ bool myvm_VM_run(myvm_VM *vm) {
 		case MYVM_INS_LD8: {
 			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
-			logD("ld8 r%x <- #%02x", arg1, b1);
+			logD("ld8 r%x <- %d (#%02x)", arg1, b1, b1);
 			vm->registers[arg1] = b1;
 			break;
 		}
@@ -87,7 +87,8 @@ bool myvm_VM_run(myvm_VM *vm) {
 			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
 			uint8_t b2 = getNextByte(vm);
-			logD("ld16 r%x <- #%02x", arg1, build16From8(b1, b2));
+			uint16_t n = build16From8(b1, b2);
+			logD("ld16 r%x <- %d (#%02x)", arg1, n, n);
 			vm->registers[arg1] = build16From8(b1, b2);
 			break;
 		}
@@ -98,8 +99,9 @@ bool myvm_VM_run(myvm_VM *vm) {
 			uint8_t b2 = getNextByte(vm);
 			uint8_t b3 = getNextByte(vm);
 			uint8_t b4 = getNextByte(vm);
-			logD("ld32 r%x <- #%02x", arg1, build32From8(b1, b2, b3, b4));
-			vm->registers[arg1] = build32From8(b1, b2, b3, b4);
+			uint32_t n = build32From8(b1, b2, b3, b4);
+			logD("ld32 r%x <- %d (#%02x)", arg1, n, n);
+			vm->registers[arg1] = n;
 			break;
 		}
 
