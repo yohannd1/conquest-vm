@@ -1,3 +1,12 @@
+LD8 r0 10
+PRINT r0
+
+LD16 r1 3000
+PRINT r1
+
+LD32 r2 99999
+PRINT r2
+
 BRK /* foo bar */
 
 /*

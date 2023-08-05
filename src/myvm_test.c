@@ -26,13 +26,11 @@ int main(int argc, char *argv[]) {
 			if (tighter != NULL) fbuf.ptr = tighter;
 			break;
 		}
-
 		if (i >= fbuf.len) {
 			fbuf.len += CHUNK_SIZE;
 			fbuf.ptr = realloc(fbuf.ptr, fbuf.len);
 			if (fbuf.ptr == NULL) die("OOM");
 		}
-
 		fbuf.ptr[i] = (uint8_t) c;
 	}
 	fclose(fp);
@@ -47,6 +45,9 @@ int main(int argc, char *argv[]) {
 	if (!myvm_VM_copyRom(&vm, myvm_BufConst_from(rom))) {
 		die("failed to copy ROM to VM memory");
 	}
+	/* for (i = 0x100; i < 0x200; i++) { */
+	/* 	logD("rom[#%02x] = #%02x", i, vm.memory.ptr[i]); */
+	/* } */
 	if (!myvm_VM_run(&vm)) die("VM exited with failure");
 
 	return 0;

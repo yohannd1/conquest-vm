@@ -4,16 +4,29 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MYVM_INS_BREAK	 0 /* stops execution */
-#define MYVM_INS_COPY	 1 /* copies the value from arg2 to arg1 */
-#define MYVM_INS_LOAD	 2 /* loads a constant value (arg2) into arg1 */
-#define MYVM_INS_LOADIF	 3 /* same as load, but only does it if the bool flag is true */
-#define MYVM_INS_READ8	 4 /* reads a byte from memory address arg2 into arg1 */
-#define MYVM_INS_READ16	 5 /* reads a word from memory address arg2 into arg1 */
-#define MYVM_INS_READ32	 6 /* reads a 32-bit word from memory address arg2 into arg1 */
-#define MYVM_INS_WRITE8	 7
-#define MYVM_INS_WRITE16 8
-#define MYVM_INS_WRITE32 9
+typedef enum {
+	MYVM_INS_BRK = 0, /* stop VM */
+	MYVM_INS_CPY,
+	MYVM_INS_JMPIF,
+
+	/* load */
+	MYVM_INS_LD8,
+	MYVM_INS_LD16,
+	MYVM_INS_LD32,
+
+	/* read */
+	MYVM_INS_RD8,
+	MYVM_INS_RD16,
+	MYVM_INS_RD32,
+
+	/* write */
+	MYVM_INS_WR8,
+	MYVM_INS_WR16,
+	MYVM_INS_WR32,
+
+	/* debug instruction */
+	MYVM_INS_PRINT,
+} myvm_Instruction;
 
 /* these instructions change the leftmost bit of the flags register */
 #define MYVM_CMP_EQ
