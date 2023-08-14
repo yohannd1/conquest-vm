@@ -1,6 +1,6 @@
 #include "log.h"
-#include "myvm_asm.h"
-#include "myvm_vm.h"
+#include "conq_asm.h"
+#include "conq_vm.h"
 
 #include <stddef.h>
 
@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 	if (fp == NULL) die("failed to open file %s", argv[1]);
 
 	const size_t CHUNK_SIZE = 512;
-	myvm_Buf fbuf = (myvm_Buf) { .ptr = NULL, .len = 0 };
+	conq_Buf fbuf = (conq_Buf) { .ptr = NULL, .len = 0 };
 	fbuf.len = CHUNK_SIZE;
 	fbuf.ptr = malloc(CHUNK_SIZE);
 	if (fbuf.ptr == NULL) die("OOM");
@@ -35,21 +35,21 @@ int main(int argc, char *argv[]) {
 	}
 	fclose(fp);
 
-	myvm_Buf rom;
-	myvm_Asm asm = myvm_Asm_init(myvm_BufConst_from(fbuf));
-	if (!myvm_Asm_compile(&asm, &rom)) {
+	conq_Buf rom;
+	conq_Asm asm = conq_Asm_init(conq_BufConst_from(fbuf));
+	if (!conq_Asm_compile(&asm, &rom)) {
 		die("failed to compile to ROM");
 	}
 
-	myvm_VM vm;
-	if (!myvm_VM_init(&vm, 64000)) die("failed to init VM");
-	if (!myvm_VM_copyRom(&vm, myvm_BufConst_from(rom))) {
+	conq_VM vm;
+	if (!conq_VM_init(&vm, 64000)) die("failed to init VM");
+	if (!conq_VM_copyRom(&vm, conq_BufConst_from(rom))) {
 		die("failed to copy ROM to VM memory");
 	}
 	/* for (i = 0x100; i < 0x200; i++) { */
 	/* 	logD("rom[#%02x] = #%02x", i, vm.memory.ptr[i]); */
 	/* } */
-	if (!myvm_VM_run(&vm)) die("VM exited with failure");
+	if (!conq_VM_run(&vm)) die("VM exited with failure");
 
 	return 0;
 }

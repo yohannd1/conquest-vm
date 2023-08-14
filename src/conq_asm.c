@@ -1,27 +1,27 @@
 #include "log.h"
-#include "myvm_asm.h"
+#include "conq_asm.h"
 
 #include <assert.h>
 #include <stdlib.h>
 
-static bool stringEqN0(myvm_BufConst s1, const char *s2);
+static bool stringEqN0(conq_BufConst s1, const char *s2);
 static bool isWhitespace(uint8_t c);
 
-static myvm_BufConst readWord(myvm_Asm *asm);
-static bool readReg(myvm_Asm *asm, uint8_t *dest);
-static bool readInt(myvm_Asm *asm, uint32_t *dest);
+static conq_BufConst readWord(conq_Asm *asm);
+static bool readReg(conq_Asm *asm, uint8_t *dest);
+static bool readInt(conq_Asm *asm, uint32_t *dest);
 
-static void myvm_Asm_write(myvm_Asm *asm, uint8_t byte);
+static void conq_Asm_write(conq_Asm *asm, uint8_t byte);
 
-static const myvm_BufConst ERRW_EOF = (myvm_BufConst) { .ptr = (const uint8_t *) "EOF", .len = 3 };
+static const conq_BufConst ERRW_EOF = (conq_BufConst) { .ptr = (const uint8_t *) "EOF", .len = 3 };
 
 #define READ_REG(asm, ptr) \
 	if (!readReg(asm, ptr)) return false;
 #define READ_INT(asm, ptr) \
 	if (!readInt(asm, ptr)) return false;
 
-myvm_Asm myvm_Asm_init(myvm_BufConst src) {
-	return (myvm_Asm) {
+conq_Asm conq_Asm_init(conq_BufConst src) {
+	return (conq_Asm) {
 		.src = src,
 		.src_line = 1,
 		.src_i = 0,
@@ -29,13 +29,13 @@ myvm_Asm myvm_Asm_init(myvm_BufConst src) {
 	};
 }
 
-bool myvm_Asm_compile(myvm_Asm *asm, myvm_Buf *dest_rom) {
+bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 	const size_t CHUNK_SIZE = 256;
-	asm->rom = (myvm_Buf) { .ptr = NULL, .len = CHUNK_SIZE };
+	asm->rom = (conq_Buf) { .ptr = NULL, .len = CHUNK_SIZE };
 	asm->rom.ptr = malloc(asm->rom.len * sizeof(uint8_t));
 
 	while (true) {
-		myvm_BufConst w = readWord(asm);
+		conq_BufConst w = readWord(asm);
 		if (w.ptr == NULL) break;
 
 		if (asm->rom_i >= asm->rom.len) {
@@ -48,7 +48,7 @@ bool myvm_Asm_compile(myvm_Asm *asm, myvm_Buf *dest_rom) {
 		}
 
 		if (stringEqN0(w, "BRK")) {
-			myvm_Asm_write(asm, MYVM_INS_BRK);
+			conq_Asm_write(asm, MYVM_INS_BRK);
 		} else if (stringEqN0(w, "/*")) {
 			while (true) {
 				w = readWord(asm);
@@ -67,9 +67,9 @@ bool myvm_Asm_compile(myvm_Asm *asm, myvm_Buf *dest_rom) {
 			uint32_t n;
 			READ_INT(asm, &n);
 
-			myvm_Asm_write(asm, MYVM_INS_LD8);
-			myvm_Asm_write(asm, (reg & 0b111) << 5);
-			myvm_Asm_write(asm, (uint8_t) n);
+			conq_Asm_write(asm, MYVM_INS_LD8);
+			conq_Asm_write(asm, (reg & 0b111) << 5);
+			conq_Asm_write(asm, (uint8_t) n);
 		} else if (stringEqN0(w, "LD16")) {
 			uint8_t reg;
 			READ_REG(asm, &reg);
@@ -77,10 +77,10 @@ bool myvm_Asm_compile(myvm_Asm *asm, myvm_Buf *dest_rom) {
 			uint32_t n;
 			READ_INT(asm, &n);
 
-			myvm_Asm_write(asm, MYVM_INS_LD16);
-			myvm_Asm_write(asm, (reg & 0b111) << 5);
-			myvm_Asm_write(asm, (uint8_t) (n >> 8));
-			myvm_Asm_write(asm, (uint8_t) n);
+			conq_Asm_write(asm, MYVM_INS_LD16);
+			conq_Asm_write(asm, (reg & 0b111) << 5);
+			conq_Asm_write(asm, (uint8_t) (n >> 8));
+			conq_Asm_write(asm, (uint8_t) n);
 		} else if (stringEqN0(w, "LD32")) {
 			uint8_t reg;
 			READ_REG(asm, &reg);
@@ -88,18 +88,18 @@ bool myvm_Asm_compile(myvm_Asm *asm, myvm_Buf *dest_rom) {
 			uint32_t n;
 			READ_INT(asm, &n);
 
-			myvm_Asm_write(asm, MYVM_INS_LD32);
-			myvm_Asm_write(asm, (reg & 0b111) << 5);
-			myvm_Asm_write(asm, (uint8_t) (n >> 24));
-			myvm_Asm_write(asm, (uint8_t) (n >> 16));
-			myvm_Asm_write(asm, (uint8_t) (n >> 8));
-			myvm_Asm_write(asm, (uint8_t) n);
+			conq_Asm_write(asm, MYVM_INS_LD32);
+			conq_Asm_write(asm, (reg & 0b111) << 5);
+			conq_Asm_write(asm, (uint8_t) (n >> 24));
+			conq_Asm_write(asm, (uint8_t) (n >> 16));
+			conq_Asm_write(asm, (uint8_t) (n >> 8));
+			conq_Asm_write(asm, (uint8_t) n);
 		} else if (stringEqN0(w, "PRINT")) {
 			uint8_t reg;
 			READ_REG(asm, &reg);
 
-			myvm_Asm_write(asm, MYVM_INS_PRINT);
-			myvm_Asm_write(asm, (reg & 0b111) << 5);
+			conq_Asm_write(asm, MYVM_INS_PRINT);
+			conq_Asm_write(asm, (reg & 0b111) << 5);
 		} else {
 			logD("line %d: unknown word: %.*s", asm->src_line, w.len, w.ptr);
 			return false;
@@ -114,7 +114,7 @@ bool myvm_Asm_compile(myvm_Asm *asm, myvm_Buf *dest_rom) {
 	return true;
 }
 
-static myvm_BufConst readWord(myvm_Asm *asm) {
+static conq_BufConst readWord(conq_Asm *asm) {
 	/* skip whitespace and count lines */
 	for (; asm->src_i < asm->src.len; asm->src_i += 1) {
 		char c = asm->src.ptr[asm->src_i];
@@ -130,11 +130,11 @@ static myvm_BufConst readWord(myvm_Asm *asm) {
 		;
 
 	return (start == asm->src_i)
-		   ? (myvm_BufConst) { .ptr = NULL, .len = 0 }
-		   : (myvm_BufConst) { .ptr = &asm->src.ptr[start], .len = asm->src_i - start };
+		   ? (conq_BufConst) { .ptr = NULL, .len = 0 }
+		   : (conq_BufConst) { .ptr = &asm->src.ptr[start], .len = asm->src_i - start };
 }
 
-static bool stringEqN0(myvm_BufConst s1, const char *s2) {
+static bool stringEqN0(conq_BufConst s1, const char *s2) {
 	size_t i = 0;
 	while (true) {
 		if (i >= s1.len && s2[i] == '\0') return true; /* both ended */
@@ -148,8 +148,8 @@ static bool isWhitespace(uint8_t c) {
 	return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
 }
 
-static bool readReg(myvm_Asm *asm, uint8_t *dest) {
-	myvm_BufConst w = readWord(asm);
+static bool readReg(conq_Asm *asm, uint8_t *dest) {
+	conq_BufConst w = readWord(asm);
 	if (w.ptr == NULL) {
 		w = ERRW_EOF;
 		goto error;
@@ -166,8 +166,8 @@ error:
 	return false;
 }
 
-static bool readInt(myvm_Asm *asm, uint32_t *dest) {
-	myvm_BufConst w = readWord(asm);
+static bool readInt(conq_Asm *asm, uint32_t *dest) {
+	conq_BufConst w = readWord(asm);
 	if (w.ptr == NULL) {
 		w = ERRW_EOF;
 		goto error;
@@ -191,7 +191,7 @@ error:
 	return false;
 }
 
-static void myvm_Asm_write(myvm_Asm *asm, uint8_t byte) {
+static void conq_Asm_write(conq_Asm *asm, uint8_t byte) {
 	asm->rom.ptr[asm->rom_i] = byte;
 	asm->rom_i++;
 }

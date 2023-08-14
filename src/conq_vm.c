@@ -1,12 +1,12 @@
 #include "log.h"
-#include "myvm.h"
-#include "myvm_vm.h"
+#include "conq.h"
+#include "conq_vm.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-static uint8_t getNextByte(myvm_VM *vm);
+static uint8_t getNextByte(conq_VM *vm);
 static uint32_t build16From8(uint8_t b1, uint8_t b2);
 static uint32_t build32From8(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
 
@@ -18,7 +18,7 @@ static uint32_t build32From8(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
 
 /* TODO: GLFW UI */
 
-bool myvm_VM_init(myvm_VM *dest, size_t available_memory) {
+bool conq_VM_init(conq_VM *dest, size_t available_memory) {
 	/* int size assertions */
 	assert(sizeof(uint8_t) == 1);
 	assert(sizeof(uint16_t) == 2);
@@ -42,11 +42,11 @@ bool myvm_VM_init(myvm_VM *dest, size_t available_memory) {
 	return true;
 }
 
-void myvm_VM_deinit(myvm_VM *vm) {
+void conq_VM_deinit(conq_VM *vm) {
 	free(vm->memory.ptr);
 }
 
-bool myvm_VM_copyRom(myvm_VM *vm, myvm_BufConst rom) {
+bool conq_VM_copyRom(conq_VM *vm, conq_BufConst rom) {
 	if (rom.len > vm->memory.len - 0x100) {
 		logD("not enough available memory for copying ROM");
 		return false;
@@ -55,7 +55,7 @@ bool myvm_VM_copyRom(myvm_VM *vm, myvm_BufConst rom) {
 	return true;
 }
 
-bool myvm_VM_run(myvm_VM *vm) {
+bool conq_VM_run(conq_VM *vm) {
 	for (;;) {
 		/* uint32_t insptr = vm->registers[MYVM_R_INSPTR]; */
 		uint8_t ins = getNextByte(vm);
@@ -119,7 +119,7 @@ bool myvm_VM_run(myvm_VM *vm) {
 	}
 }
 
-static uint8_t getNextByte(myvm_VM *vm) {
+static uint8_t getNextByte(conq_VM *vm) {
 	size_t idx = (size_t) vm->registers[MYVM_R_INSPTR];
 	if (idx >= vm->memory.len) die("instruction pointer out of bounds");
 	vm->registers[MYVM_R_INSPTR]++;

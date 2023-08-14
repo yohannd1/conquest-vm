@@ -26,7 +26,7 @@ typedef enum {
 
 	/* debug instruction */
 	MYVM_INS_PRINT,
-} myvm_Instruction;
+} conq_Instruction;
 
 /* these instructions change the leftmost bit of the flags register */
 #define MYVM_CMP_EQ
@@ -43,14 +43,14 @@ typedef enum {
 typedef struct {
 	uint8_t *ptr;
 	size_t len;
-} myvm_Buf;
+} conq_Buf;
 
 typedef struct {
 	const uint8_t *ptr;
 	size_t len;
-} myvm_BufConst;
+} conq_BufConst;
 
-#define myvm_BufConst_from(b) \
-	(myvm_BufConst) { .ptr = b.ptr, .len = b.len }
+#define conq_BufConst_from(b) \
+	(conq_BufConst) { .ptr = b.ptr, .len = b.len }
 
 #endif
