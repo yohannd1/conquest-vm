@@ -1,3 +1,7 @@
+/* vim: ft=c
+*/
+
+/* (TEST 1)
 LD8 r0 10
 PRINT r0
 
@@ -6,12 +10,23 @@ PRINT r1
 
 LD32 r2 99999
 PRINT r2
+*/
 
-BRK /* foo bar */
+/* (TEST 2) */
+LD8 r1 #10
+PRINT r1
+
+LD32 r0 256
+WR8 r0 r1
+
+LD8 r1 00
+PRINT r1
+
+RD8 r0 r1
+PRINT r1
+
+BRK
 
 /*
 copy r0 r1   ; it always copies the u32 value of r1 to r0
-write8 r0 r1 ; writes to the address stored in r0 a byte, truncated from r1
-write16 r0 r1 ; writes to the address stored in r0 a word, truncated from r1
-write32 r0 r1 ; writes to the address stored in r0 the u32 value of r1
 */

@@ -94,6 +94,24 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			conq_Asm_write(asm, (uint8_t) (n >> 16));
 			conq_Asm_write(asm, (uint8_t) (n >> 8));
 			conq_Asm_write(asm, (uint8_t) n);
+		} else if (stringEqN0(w, "WR8")) {
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			uint8_t rval;
+			READ_REG(asm, &rval);
+
+			conq_Asm_write(asm, MYVM_INS_WR8);
+			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
+		} else if (stringEqN0(w, "RD8")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, MYVM_INS_RD8);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
 		} else if (stringEqN0(w, "PRINT")) {
 			uint8_t reg;
 			READ_REG(asm, &reg);
@@ -173,21 +191,38 @@ static bool readInt(conq_Asm *asm, uint32_t *dest) {
 		goto error;
 	}
 
+	if (w.len == 0) goto error;
+	bool is_hex = (w.ptr[0] == '#');
+
 	uint32_t mul = 1;
 	uint32_t result = 0;
-	size_t j = 0;
-	for (; j < w.len; j++) {
-		char c = w.ptr[w.len - 1 - j];
-		if (c < '0' || c > '9') goto error;
-		result += (uint32_t) (c - '0') * mul;
-		mul *= 10;
+	size_t i = 0;
+	for (; i < w.len; i++) {
+		size_t idx = w.len - 1 - i;
+		if (is_hex && idx == 0) continue;
+		char c = w.ptr[idx];
+
+		if (is_hex) {
+			if (c >= '0' && c <= '9') {
+				result += (uint32_t) (c - '0') * mul;
+			} else if (c >= 'A' && c <= 'F') {
+				result += (uint32_t) (c - 'A' + 10) * mul;
+			} else {
+				goto error;
+			}
+			mul *= 16;
+		} else {
+			if (c < '0' || c > '9') goto error;
+			result += (uint32_t) (c - '0') * mul;
+			mul *= 10;
+		}
 	}
 
 	*dest = result;
 	return true;
 
 error:
-	logD("expected integer, got %.*s", w.len, w.ptr);
+	logD("expected integer, got \"%.*s\"", w.len, w.ptr);
 	return false;
 }
 

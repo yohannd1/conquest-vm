@@ -13,11 +13,6 @@ static uint32_t build32From8(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
 #define MYVM_GET_ARG1(x) ((x & 0b11100000) >> 5)
 #define MYVM_GET_ARG2(x) ((x & 0b00011100) >> 2)
 
-/* TODO: little endian or big endian? (probably big endian, which actually means
- * 0xAABB is [AA, BB]) */
-
-/* TODO: GLFW UI */
-
 bool conq_VM_init(conq_VM *dest, size_t available_memory) {
 	/* int size assertions */
 	assert(sizeof(uint8_t) == 1);
@@ -109,6 +104,41 @@ bool conq_VM_run(conq_VM *vm) {
 			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
 			uint32_t r =vm->registers[arg1];
 			logD("r%x is %02d (#%02x)", arg1, r, r);
+			break;
+		}
+
+		case MYVM_INS_WR8: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = MYVM_GET_ARG1(regs);
+			uint8_t rval = MYVM_GET_ARG2(regs);
+
+			logD("wr8 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
+
+			uint32_t dest = vm->registers[rdest];
+			if (dest > (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx; max memory is #%02lx", dest, vm->memory.len);
+				return false;
+			}
+
+			uint32_t val = vm->registers[rval];
+			vm->memory.ptr[dest] = val;
+			break;
+		}
+
+		case MYVM_INS_RD8: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rsrc = MYVM_GET_ARG1(regs);
+			uint8_t rdest = MYVM_GET_ARG2(regs);
+
+			uint32_t src = vm->registers[rsrc];
+			logD("rd8 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
+
+			if (src > (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx; max memory is #%02lx", src, vm->memory.len);
+				return false;
+			}
+
+			vm->registers[rdest] = vm->memory.ptr[src];
 			break;
 		}
 

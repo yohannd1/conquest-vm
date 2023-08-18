@@ -7,19 +7,19 @@
 typedef enum {
 	MYVM_INS_BRK = 0, /* stop VM */
 	MYVM_INS_CPY,
-	MYVM_INS_JMPIF,
+	MYVM_INS_JMPIF, /* increase PC by ARG1 if bool flag is true */
 
 	/* load */
 	MYVM_INS_LD8,
 	MYVM_INS_LD16,
 	MYVM_INS_LD32,
 
-	/* read */
+	/* read (TODO: rename to fetch?) */
 	MYVM_INS_RD8,
 	MYVM_INS_RD16,
 	MYVM_INS_RD32,
 
-	/* write */
+	/* write (TODO: rename to store?) */
 	MYVM_INS_WR8,
 	MYVM_INS_WR16,
 	MYVM_INS_WR32,
@@ -29,13 +29,14 @@ typedef enum {
 } conq_Instruction;
 
 /* these instructions change the leftmost bit of the flags register */
-#define MYVM_CMP_EQ
-#define MYVM_CMP_L
-#define MYVM_CMP_LE
-#define MYVM_CMP_G
-#define MYVM_CMP_GE
-#define MYVM_CMP_NOT
-#define MYVM_NOT
+/* TODO */
+/* #define MYVM_CMP_EQ */
+/* #define MYVM_CMP_L */
+/* #define MYVM_CMP_LE */
+/* #define MYVM_CMP_G */
+/* #define MYVM_CMP_GE */
+/* #define MYVM_CMP_NOT */
+/* #define MYVM_NOT */
 
 #define MYVM_R_INSPTR 6
 #define MYVM_R_FLAGS  7
