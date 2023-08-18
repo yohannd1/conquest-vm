@@ -1,7 +1,7 @@
 BUILD_DIR := build
 PROGRAM := $(BUILD_DIR)/conq_test
 SRC := $(wildcard src/*.c)
-CFLAGS = -std=c89 -Wall
+CFLAGS = -std=c89 -Wall -O3
 
 $(PROGRAM): $(SRC) $(BUILD_DIR)
 	gcc -o $@ $(SRC) $(CFLAGS)
