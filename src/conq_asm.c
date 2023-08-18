@@ -60,6 +60,15 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 					break;
 				}
 			}
+		} else if (stringEqN0(w, "CPY")) {
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			uint8_t rval;
+			READ_REG(asm, &rval);
+
+			conq_Asm_write(asm, MYVM_INS_CPY);
+			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
 		} else if (stringEqN0(w, "LD8")) {
 			uint8_t reg;
 			READ_REG(asm, &reg);
@@ -103,6 +112,24 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 
 			conq_Asm_write(asm, MYVM_INS_WR8);
 			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
+		} else if (stringEqN0(w, "WR16")) {
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			uint8_t rval;
+			READ_REG(asm, &rval);
+
+			conq_Asm_write(asm, MYVM_INS_WR16);
+			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
+		} else if (stringEqN0(w, "WR32")) {
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			uint8_t rval;
+			READ_REG(asm, &rval);
+
+			conq_Asm_write(asm, MYVM_INS_WR32);
+			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
 		} else if (stringEqN0(w, "RD8")) {
 			uint8_t rsrc;
 			READ_REG(asm, &rsrc);
@@ -111,6 +138,24 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			READ_REG(asm, &rdest);
 
 			conq_Asm_write(asm, MYVM_INS_RD8);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
+		} else if (stringEqN0(w, "RD16")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, MYVM_INS_RD16);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
+		} else if (stringEqN0(w, "RD32")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, MYVM_INS_RD32);
 			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
 		} else if (stringEqN0(w, "PRINT")) {
 			uint8_t reg;
@@ -207,6 +252,8 @@ static bool readInt(conq_Asm *asm, uint32_t *dest) {
 				result += (uint32_t) (c - '0') * mul;
 			} else if (c >= 'A' && c <= 'F') {
 				result += (uint32_t) (c - 'A' + 10) * mul;
+			} else if (c >= 'a' && c <= 'f') {
+				result += (uint32_t) (c - 'a' + 10) * mul;
 			} else {
 				goto error;
 			}

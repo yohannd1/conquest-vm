@@ -52,9 +52,7 @@ bool conq_VM_copyRom(conq_VM *vm, conq_BufConst rom) {
 
 bool conq_VM_run(conq_VM *vm) {
 	for (;;) {
-		/* uint32_t insptr = vm->registers[MYVM_R_INSPTR]; */
 		uint8_t ins = getNextByte(vm);
-		/* logD("at #%x : ins #%x", insptr, ins); */
 
 		switch (ins) {
 		case MYVM_INS_BRK:
@@ -62,11 +60,12 @@ bool conq_VM_run(conq_VM *vm) {
 			return true;
 
 		case MYVM_INS_CPY: {
-			uint8_t argflag = getNextByte(vm);
-			uint8_t arg1 = MYVM_GET_ARG1(argflag);
-			uint8_t arg2 = MYVM_GET_ARG2(argflag);
-			logD("cpy r%x <- r%x", arg1, arg2);
-			vm->registers[arg1] = vm->registers[arg2];
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = MYVM_GET_ARG1(regs);
+			uint8_t rval = MYVM_GET_ARG2(regs);
+
+			logD("cpy r%x <- r%x", rdest, rval);
+			vm->registers[rdest] = vm->registers[rval];
 			break;
 		}
 
@@ -102,7 +101,7 @@ bool conq_VM_run(conq_VM *vm) {
 
 		case MYVM_INS_PRINT: {
 			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
-			uint32_t r =vm->registers[arg1];
+			uint32_t r = vm->registers[arg1];
 			logD("r%x is %02d (#%02x)", arg1, r, r);
 			break;
 		}
@@ -115,13 +114,61 @@ bool conq_VM_run(conq_VM *vm) {
 			logD("wr8 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
 
 			uint32_t dest = vm->registers[rdest];
-			if (dest > (uint32_t)vm->memory.len) {
+			if (dest >= (uint32_t)vm->memory.len) {
 				logD("address too big: got #%02lx; max memory is #%02lx", dest, vm->memory.len);
 				return false;
 			}
 
 			uint32_t val = vm->registers[rval];
 			vm->memory.ptr[dest] = val;
+			break;
+		}
+
+		case MYVM_INS_WR16: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = MYVM_GET_ARG1(regs);
+			uint8_t rval = MYVM_GET_ARG2(regs);
+
+			logD("wr16 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
+
+			uint32_t dest = vm->registers[rdest];
+			if (dest + 1 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", dest, vm->memory.len);
+				return false;
+			}
+
+			uint32_t val = vm->registers[rval];
+
+			uint8_t b1 = (uint8_t)(val >> 8);
+			uint8_t b2 = (uint8_t)val;
+			vm->memory.ptr[dest] = b1;
+			vm->memory.ptr[dest+1] = b2;
+			break;
+		}
+
+		case MYVM_INS_WR32: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = MYVM_GET_ARG1(regs);
+			uint8_t rval = MYVM_GET_ARG2(regs);
+
+			logD("wr32 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
+
+			uint32_t dest = vm->registers[rdest];
+			if (dest + 1 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", dest, vm->memory.len);
+				return false;
+			}
+
+			uint32_t val = vm->registers[rval];
+
+			uint8_t b1 = (uint8_t)(val >> 24);
+			uint8_t b2 = (uint8_t)(val >> 16);
+			uint8_t b3 = (uint8_t)(val >> 8);
+			uint8_t b4 = (uint8_t)val;
+			vm->memory.ptr[dest] = b1;
+			vm->memory.ptr[dest+1] = b2;
+			vm->memory.ptr[dest+2] = b3;
+			vm->memory.ptr[dest+3] = b4;
 			break;
 		}
 
@@ -133,12 +180,54 @@ bool conq_VM_run(conq_VM *vm) {
 			uint32_t src = vm->registers[rsrc];
 			logD("rd8 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
 
-			if (src > (uint32_t)vm->memory.len) {
+			if (src >= (uint32_t)vm->memory.len) {
 				logD("address too big: got #%02lx; max memory is #%02lx", src, vm->memory.len);
 				return false;
 			}
 
 			vm->registers[rdest] = vm->memory.ptr[src];
+			break;
+		}
+
+		case MYVM_INS_RD16: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rsrc = MYVM_GET_ARG1(regs);
+			uint8_t rdest = MYVM_GET_ARG2(regs);
+
+			uint32_t src = vm->registers[rsrc];
+			logD("rd16 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
+
+			if (src + 1 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", src, vm->memory.len);
+				return false;
+			}
+
+			uint8_t b1 = vm->memory.ptr[src];
+			uint8_t b2 = vm->memory.ptr[src+1];
+			vm->registers[rdest] = build16From8(b1, b2);
+
+			break;
+		}
+
+		case MYVM_INS_RD32: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rsrc = MYVM_GET_ARG1(regs);
+			uint8_t rdest = MYVM_GET_ARG2(regs);
+
+			uint32_t src = vm->registers[rsrc];
+			logD("rd32 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
+
+			if (src + 3 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (4 bytes); max memory is #%02lx", src, vm->memory.len);
+				return false;
+			}
+
+			uint8_t b1 = vm->memory.ptr[src];
+			uint8_t b2 = vm->memory.ptr[src+1];
+			uint8_t b3 = vm->memory.ptr[src+2];
+			uint8_t b4 = vm->memory.ptr[src+3];
+			vm->registers[rdest] = build32From8(b1, b2, b3, b4);
+
 			break;
 		}
 

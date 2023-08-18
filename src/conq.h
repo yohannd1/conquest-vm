@@ -6,7 +6,7 @@
 
 typedef enum {
 	MYVM_INS_BRK = 0, /* stop VM */
-	MYVM_INS_CPY,
+	MYVM_INS_CPY, /* copy the value of one register to another */
 	MYVM_INS_JMPIF, /* increase PC by ARG1 if bool flag is true */
 
 	/* load */
@@ -26,6 +26,7 @@ typedef enum {
 
 	/* debug instruction */
 	MYVM_INS_PRINT,
+	/* TODO: MYVM_INS_ASSERT */
 } conq_Instruction;
 
 /* these instructions change the leftmost bit of the flags register */

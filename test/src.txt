@@ -1,7 +1,7 @@
 /* vim: ft=c
 */
 
-/* (TEST 1)
+/* (TEST 1: LOAD)
 LD8 r0 10
 PRINT r0
 
@@ -12,21 +12,27 @@ LD32 r2 99999
 PRINT r2
 */
 
-/* (TEST 2) */
-LD8 r1 #10
+/* (TEST 2: READ/WRITE)
+LD32 r1 #40000
 PRINT r1
 
-LD32 r0 256
-WR8 r0 r1
+LD32 r0 #100
+WR32 r0 r1
 
 LD8 r1 00
 PRINT r1
 
-RD8 r0 r1
+RD32 r0 r1
 PRINT r1
+*/
+
+/* (TEST 3: COPY)
+LD8 r0 #00
+LD8 r1 #0f
+
+CPY r0 r1
+PRINT r0
+PRINT r1
+*/
 
 BRK
-
-/*
-copy r0 r1   ; it always copies the u32 value of r1 to r0
-*/
