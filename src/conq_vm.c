@@ -10,8 +10,8 @@ static uint8_t getNextByte(conq_VM *vm);
 static uint32_t build16From8(uint8_t b1, uint8_t b2);
 static uint32_t build32From8(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
 
-#define MYVM_GET_ARG1(x) ((x & 0b11100000) >> 5)
-#define MYVM_GET_ARG2(x) ((x & 0b00011100) >> 2)
+#define CONQ_GET_ARG1(x) ((x & 0b11100000) >> 5)
+#define CONQ_GET_ARG2(x) ((x & 0b00011100) >> 2)
 
 bool conq_VM_init(conq_VM *dest, size_t available_memory) {
 	/* int size assertions */
@@ -20,7 +20,7 @@ bool conq_VM_init(conq_VM *dest, size_t available_memory) {
 	assert(sizeof(uint32_t) == 4);
 
 	memset(&dest->registers, 0, sizeof(dest->registers));
-	dest->registers[MYVM_R_INSPTR] = 0x100;
+	dest->registers[CONQ_R_INSPTR] = 0x100;
 
 	uint8_t *mem = malloc(available_memory);
 	if (mem == NULL) {
@@ -55,30 +55,30 @@ bool conq_VM_run(conq_VM *vm) {
 		uint8_t ins = getNextByte(vm);
 
 		switch (ins) {
-		case MYVM_INS_BRK:
+		case CONQ_INS_BRK:
 			logD("emulation finished");
 			return true;
 
-		case MYVM_INS_CPY: {
+		case CONQ_INS_CPY: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = MYVM_GET_ARG1(regs);
-			uint8_t rval = MYVM_GET_ARG2(regs);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rval = CONQ_GET_ARG2(regs);
 
 			logD("cpy r%x <- r%x", rdest, rval);
 			vm->registers[rdest] = vm->registers[rval];
 			break;
 		}
 
-		case MYVM_INS_LD8: {
-			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
+		case CONQ_INS_LD8: {
+			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
 			logD("ld8 r%x <- %d (#%02x)", arg1, b1, b1);
 			vm->registers[arg1] = b1;
 			break;
 		}
 
-		case MYVM_INS_LD16: {
-			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
+		case CONQ_INS_LD16: {
+			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
 			uint8_t b2 = getNextByte(vm);
 			uint16_t n = build16From8(b1, b2);
@@ -87,8 +87,8 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
-		case MYVM_INS_LD32: {
-			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
+		case CONQ_INS_LD32: {
+			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
 			uint8_t b2 = getNextByte(vm);
 			uint8_t b3 = getNextByte(vm);
@@ -99,17 +99,17 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
-		case MYVM_INS_PRINT: {
-			uint8_t arg1 = MYVM_GET_ARG1(getNextByte(vm));
+		case CONQ_INS_PRINT: {
+			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
 			uint32_t r = vm->registers[arg1];
 			logD("r%x is %02d (#%02x)", arg1, r, r);
 			break;
 		}
 
-		case MYVM_INS_WR8: {
+		case CONQ_INS_WR8: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = MYVM_GET_ARG1(regs);
-			uint8_t rval = MYVM_GET_ARG2(regs);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rval = CONQ_GET_ARG2(regs);
 
 			logD("wr8 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
 
@@ -124,10 +124,10 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
-		case MYVM_INS_WR16: {
+		case CONQ_INS_WR16: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = MYVM_GET_ARG1(regs);
-			uint8_t rval = MYVM_GET_ARG2(regs);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rval = CONQ_GET_ARG2(regs);
 
 			logD("wr16 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
 
@@ -146,10 +146,10 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
-		case MYVM_INS_WR32: {
+		case CONQ_INS_WR32: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = MYVM_GET_ARG1(regs);
-			uint8_t rval = MYVM_GET_ARG2(regs);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rval = CONQ_GET_ARG2(regs);
 
 			logD("wr32 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
 
@@ -172,10 +172,10 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
-		case MYVM_INS_RD8: {
+		case CONQ_INS_RD8: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rsrc = MYVM_GET_ARG1(regs);
-			uint8_t rdest = MYVM_GET_ARG2(regs);
+			uint8_t rsrc = CONQ_GET_ARG1(regs);
+			uint8_t rdest = CONQ_GET_ARG2(regs);
 
 			uint32_t src = vm->registers[rsrc];
 			logD("rd8 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
@@ -189,10 +189,10 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
-		case MYVM_INS_RD16: {
+		case CONQ_INS_RD16: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rsrc = MYVM_GET_ARG1(regs);
-			uint8_t rdest = MYVM_GET_ARG2(regs);
+			uint8_t rsrc = CONQ_GET_ARG1(regs);
+			uint8_t rdest = CONQ_GET_ARG2(regs);
 
 			uint32_t src = vm->registers[rsrc];
 			logD("rd16 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
@@ -209,10 +209,10 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
-		case MYVM_INS_RD32: {
+		case CONQ_INS_RD32: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rsrc = MYVM_GET_ARG1(regs);
-			uint8_t rdest = MYVM_GET_ARG2(regs);
+			uint8_t rsrc = CONQ_GET_ARG1(regs);
+			uint8_t rdest = CONQ_GET_ARG2(regs);
 
 			uint32_t src = vm->registers[rsrc];
 			logD("rd32 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
@@ -231,6 +231,90 @@ bool conq_VM_run(conq_VM *vm) {
 			break;
 		}
 
+		case CONQ_INS_ADD: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rop2 = CONQ_GET_ARG2(regs);
+
+			uint32_t op2 = vm->registers[rop2];
+			logD("add r%x (#%02x) += r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
+
+			/* FIXME: consistent overflow handling (right now it doesnt even do
+			   that, at all) */
+			vm->registers[rdest] += op2;
+			break;
+		}
+
+		case CONQ_INS_SUB: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rop2 = CONQ_GET_ARG2(regs);
+
+			uint32_t op2 = vm->registers[rop2];
+			logD("sub r%x (#%02x) -= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
+
+			/* FIXME: consistent overflow handling (right now it doesnt even do
+			   that, at all) */
+			vm->registers[rdest] -= op2;
+			break;
+		}
+
+		case CONQ_INS_DIV: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rop2 = CONQ_GET_ARG2(regs);
+
+			uint32_t op2 = vm->registers[rop2];
+			logD("div r%x (#%02x) /= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
+
+			/* FIXME: consistent overflow handling (right now it doesnt even do
+			   that, at all) */
+			vm->registers[rdest] /= op2;
+			break;
+		}
+
+		case CONQ_INS_MUL: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rop2 = CONQ_GET_ARG2(regs);
+
+			uint32_t op2 = vm->registers[rop2];
+			logD("mul r%x (#%02x) *= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
+
+			/* FIXME: consistent overflow handling (right now it doesnt even do
+			   that, at all) */
+			vm->registers[rdest] *= op2;
+			break;
+		}
+
+		case CONQ_INS_SHL: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rop2 = CONQ_GET_ARG2(regs);
+
+			uint32_t op2 = vm->registers[rop2];
+			logD("shl r%x (#%02x) <<= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
+
+			/* FIXME: consistent overflow handling (right now it doesnt even do
+			   that, at all) */
+			vm->registers[rdest] <<= op2;
+			break;
+		}
+
+		case CONQ_INS_SHR: {
+			uint8_t regs = getNextByte(vm);
+			uint8_t rdest = CONQ_GET_ARG1(regs);
+			uint8_t rop2 = CONQ_GET_ARG2(regs);
+
+			uint32_t op2 = vm->registers[rop2];
+			logD("shr r%x (#%02x) >>= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
+
+			/* FIXME: consistent overflow handling (right now it doesnt even do
+			   that, at all) */
+			vm->registers[rdest] >>= op2;
+			break;
+		}
+
 		default:
 			logD("unknown instruction: %d", ins);
 			return false;
@@ -239,9 +323,9 @@ bool conq_VM_run(conq_VM *vm) {
 }
 
 static uint8_t getNextByte(conq_VM *vm) {
-	size_t idx = (size_t) vm->registers[MYVM_R_INSPTR];
+	size_t idx = (size_t) vm->registers[CONQ_R_INSPTR];
 	if (idx >= vm->memory.len) die("instruction pointer out of bounds");
-	vm->registers[MYVM_R_INSPTR]++;
+	vm->registers[CONQ_R_INSPTR]++;
 	return vm->memory.ptr[idx];
 }
 

@@ -7,6 +7,7 @@ At the beginning, the first 64kb are read into memory, and the instruction point
 ## Processor
 
 TODO: registers and their meanings
+  TODO: probably upgrade to 16 registers instead of 8
 
 TODO: 0xAABBCCDD at @00 means that @00=AA, @01=BB, @02=CC, @03=DD (is
 this little or big endian?)

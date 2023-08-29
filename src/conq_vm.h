@@ -1,5 +1,5 @@
-#ifndef _MYVM_VM_H
-#define _MYVM_VM_H
+#ifndef _CONQ_VM_H
+#define _CONQ_VM_H
 
 #include "conq.h"
 
@@ -16,4 +16,4 @@ void conq_VM_deinit(conq_VM *vm);
 bool conq_VM_copyRom(conq_VM *vm, conq_BufConst rom);
 bool conq_VM_run(conq_VM *vm);
 
-#endif /* _MYVM_VM_H */
+#endif /* _CONQ_VM_H */

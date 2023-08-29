@@ -48,7 +48,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 		}
 
 		if (stringEqN0(w, "BRK")) {
-			conq_Asm_write(asm, MYVM_INS_BRK);
+			conq_Asm_write(asm, CONQ_INS_BRK);
 		} else if (stringEqN0(w, "/*")) {
 			while (true) {
 				w = readWord(asm);
@@ -67,7 +67,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint8_t rval;
 			READ_REG(asm, &rval);
 
-			conq_Asm_write(asm, MYVM_INS_CPY);
+			conq_Asm_write(asm, CONQ_INS_CPY);
 			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
 		} else if (stringEqN0(w, "LD8")) {
 			uint8_t reg;
@@ -76,7 +76,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint32_t n;
 			READ_INT(asm, &n);
 
-			conq_Asm_write(asm, MYVM_INS_LD8);
+			conq_Asm_write(asm, CONQ_INS_LD8);
 			conq_Asm_write(asm, (reg & 0b111) << 5);
 			conq_Asm_write(asm, (uint8_t) n);
 		} else if (stringEqN0(w, "LD16")) {
@@ -86,7 +86,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint32_t n;
 			READ_INT(asm, &n);
 
-			conq_Asm_write(asm, MYVM_INS_LD16);
+			conq_Asm_write(asm, CONQ_INS_LD16);
 			conq_Asm_write(asm, (reg & 0b111) << 5);
 			conq_Asm_write(asm, (uint8_t) (n >> 8));
 			conq_Asm_write(asm, (uint8_t) n);
@@ -97,7 +97,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint32_t n;
 			READ_INT(asm, &n);
 
-			conq_Asm_write(asm, MYVM_INS_LD32);
+			conq_Asm_write(asm, CONQ_INS_LD32);
 			conq_Asm_write(asm, (reg & 0b111) << 5);
 			conq_Asm_write(asm, (uint8_t) (n >> 24));
 			conq_Asm_write(asm, (uint8_t) (n >> 16));
@@ -110,7 +110,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint8_t rval;
 			READ_REG(asm, &rval);
 
-			conq_Asm_write(asm, MYVM_INS_WR8);
+			conq_Asm_write(asm, CONQ_INS_WR8);
 			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
 		} else if (stringEqN0(w, "WR16")) {
 			uint8_t rdest;
@@ -119,7 +119,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint8_t rval;
 			READ_REG(asm, &rval);
 
-			conq_Asm_write(asm, MYVM_INS_WR16);
+			conq_Asm_write(asm, CONQ_INS_WR16);
 			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
 		} else if (stringEqN0(w, "WR32")) {
 			uint8_t rdest;
@@ -128,7 +128,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint8_t rval;
 			READ_REG(asm, &rval);
 
-			conq_Asm_write(asm, MYVM_INS_WR32);
+			conq_Asm_write(asm, CONQ_INS_WR32);
 			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
 		} else if (stringEqN0(w, "RD8")) {
 			uint8_t rsrc;
@@ -137,7 +137,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint8_t rdest;
 			READ_REG(asm, &rdest);
 
-			conq_Asm_write(asm, MYVM_INS_RD8);
+			conq_Asm_write(asm, CONQ_INS_RD8);
 			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
 		} else if (stringEqN0(w, "RD16")) {
 			uint8_t rsrc;
@@ -146,7 +146,7 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint8_t rdest;
 			READ_REG(asm, &rdest);
 
-			conq_Asm_write(asm, MYVM_INS_RD16);
+			conq_Asm_write(asm, CONQ_INS_RD16);
 			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
 		} else if (stringEqN0(w, "RD32")) {
 			uint8_t rsrc;
@@ -155,14 +155,68 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			uint8_t rdest;
 			READ_REG(asm, &rdest);
 
-			conq_Asm_write(asm, MYVM_INS_RD32);
+			conq_Asm_write(asm, CONQ_INS_RD32);
 			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
 		} else if (stringEqN0(w, "PRINT")) {
 			uint8_t reg;
 			READ_REG(asm, &reg);
 
-			conq_Asm_write(asm, MYVM_INS_PRINT);
+			conq_Asm_write(asm, CONQ_INS_PRINT);
 			conq_Asm_write(asm, (reg & 0b111) << 5);
+		} else if (stringEqN0(w, "ADD")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, CONQ_INS_ADD);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
+		} else if (stringEqN0(w, "SUB")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, CONQ_INS_SUB);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
+		} else if (stringEqN0(w, "DIV")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, CONQ_INS_DIV);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
+		} else if (stringEqN0(w, "MUL")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, CONQ_INS_MUL);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
+		} else if (stringEqN0(w, "SHL")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, CONQ_INS_SHL);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
+		} else if (stringEqN0(w, "SHR")) {
+			uint8_t rsrc;
+			READ_REG(asm, &rsrc);
+
+			uint8_t rdest;
+			READ_REG(asm, &rdest);
+
+			conq_Asm_write(asm, CONQ_INS_SHR);
+			conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2));
 		} else {
 			logD("line %d: unknown word: %.*s", asm->src_line, w.len, w.ptr);
 			return false;

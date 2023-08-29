@@ -1,5 +1,5 @@
-#ifndef _MYVM_ASM_H
-#define _MYVM_ASM_H
+#ifndef _CONQ_ASM_H
+#define _CONQ_ASM_H
 
 #include "conq.h"
 

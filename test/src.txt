@@ -35,4 +35,26 @@ PRINT r0
 PRINT r1
 */
 
+/* (TEST 4: BASIC ARITHMETICS ~ (1 + 2) / 3 * 8 */
+/*
+LD32 r0 01
+LD32 r1 02
+ADD r0 r1
+LD32 r1 03
+DIV r0 r1
+LD32 r1 08
+MUL r0 r1
+PRINT r0
+*/
+
+/* (TEST 5: BIT SHIFTING) */
+/*
+LD32 r0 1
+LD32 r1 4
+SHL r0 r1
+PRINT r0
+SHR r0 r1
+PRINT r0
+*/
+
 BRK
