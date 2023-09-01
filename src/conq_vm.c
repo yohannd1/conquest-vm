@@ -7,11 +7,11 @@
 #include <string.h>
 
 static uint8_t getNextByte(conq_VM *vm);
-static uint32_t build16From8(uint8_t b1, uint8_t b2);
-static uint32_t build32From8(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
+static uint32_t encodeU16(uint8_t b1, uint8_t b2);
+static uint32_t encodeU32(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
 
-#define CONQ_GET_ARG1(x) ((x & 0b11100000) >> 5)
-#define CONQ_GET_ARG2(x) ((x & 0b00011100) >> 2)
+#define GETREG_1(x) ((x & 0b11100000) >> 5)
+#define GETREG_2(x) ((x & 0b00011100) >> 2)
 
 bool conq_VM_init(conq_VM *dest, size_t available_memory) {
 	/* int size assertions */
@@ -50,6 +50,16 @@ bool conq_VM_copyRom(conq_VM *vm, conq_BufConst rom) {
 	return true;
 }
 
+#define CASE_2REG_INS(insname, opsym, block) \
+	case CONQ_INS_ ##insname: { \
+		uint8_t regs = getNextByte(vm); \
+		uint8_t r1 = GETREG_1(regs); \
+		uint8_t r2 = GETREG_2(regs); \
+		logD("%s r%x (#%02x) %s r%x (#%02x)", #insname, r1, vm->registers[r1], opsym, r2, vm->registers[r2]); \
+		block \
+		break; \
+	}
+
 bool conq_VM_run(conq_VM *vm) {
 	for (;;) {
 		uint8_t ins = getNextByte(vm);
@@ -61,8 +71,8 @@ bool conq_VM_run(conq_VM *vm) {
 
 		case CONQ_INS_CPY: {
 			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rval = CONQ_GET_ARG2(regs);
+			uint8_t rdest = GETREG_1(regs);
+			uint8_t rval = GETREG_2(regs);
 
 			logD("cpy r%x <- r%x", rdest, rval);
 			vm->registers[rdest] = vm->registers[rval];
@@ -70,7 +80,7 @@ bool conq_VM_run(conq_VM *vm) {
 		}
 
 		case CONQ_INS_LD8: {
-			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
+			uint8_t arg1 = GETREG_1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
 			logD("ld8 r%x <- %d (#%02x)", arg1, b1, b1);
 			vm->registers[arg1] = b1;
@@ -78,242 +88,106 @@ bool conq_VM_run(conq_VM *vm) {
 		}
 
 		case CONQ_INS_LD16: {
-			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
+			uint8_t arg1 = GETREG_1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
 			uint8_t b2 = getNextByte(vm);
-			uint16_t n = build16From8(b1, b2);
+			uint16_t n = encodeU16(b1, b2);
 			logD("ld16 r%x <- %d (#%02x)", arg1, n, n);
-			vm->registers[arg1] = build16From8(b1, b2);
+			vm->registers[arg1] = encodeU16(b1, b2);
 			break;
 		}
 
 		case CONQ_INS_LD32: {
-			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
+			uint8_t arg1 = GETREG_1(getNextByte(vm));
 			uint8_t b1 = getNextByte(vm);
 			uint8_t b2 = getNextByte(vm);
 			uint8_t b3 = getNextByte(vm);
 			uint8_t b4 = getNextByte(vm);
-			uint32_t n = build32From8(b1, b2, b3, b4);
+			uint32_t n = encodeU32(b1, b2, b3, b4);
 			logD("ld32 r%x <- %d (#%02x)", arg1, n, n);
 			vm->registers[arg1] = n;
 			break;
 		}
 
 		case CONQ_INS_PRINT: {
-			uint8_t arg1 = CONQ_GET_ARG1(getNextByte(vm));
+			uint8_t arg1 = GETREG_1(getNextByte(vm));
 			uint32_t r = vm->registers[arg1];
 			logD("r%x is %02d (#%02x)", arg1, r, r);
 			break;
 		}
 
-		case CONQ_INS_WR8: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rval = CONQ_GET_ARG2(regs);
-
-			logD("wr8 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
-
-			uint32_t dest = vm->registers[rdest];
-			if (dest >= (uint32_t)vm->memory.len) {
-				logD("address too big: got #%02lx; max memory is #%02lx", dest, vm->memory.len);
+		CASE_2REG_INS(WR8, "*<-", {
+			if (r1 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx; max memory is #%02lx", r1, vm->memory.len);
 				return false;
 			}
+			vm->memory.ptr[r1] = vm->registers[r2];
+		});
 
-			uint32_t val = vm->registers[rval];
-			vm->memory.ptr[dest] = val;
-			break;
-		}
-
-		case CONQ_INS_WR16: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rval = CONQ_GET_ARG2(regs);
-
-			logD("wr16 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
-
-			uint32_t dest = vm->registers[rdest];
-			if (dest + 1 >= (uint32_t)vm->memory.len) {
-				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", dest, vm->memory.len);
+		CASE_2REG_INS(WR16, "*<-", {
+			if (r1 + 1 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", r1, vm->memory.len);
 				return false;
 			}
-
-			uint32_t val = vm->registers[rval];
-
+			uint32_t val = vm->registers[r2];
 			uint8_t b1 = (uint8_t)(val >> 8);
 			uint8_t b2 = (uint8_t)val;
-			vm->memory.ptr[dest] = b1;
-			vm->memory.ptr[dest+1] = b2;
-			break;
-		}
+			vm->memory.ptr[r1] = b1;
+			vm->memory.ptr[r1+1] = b2;
+		});
 
-		case CONQ_INS_WR32: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rval = CONQ_GET_ARG2(regs);
-
-			logD("wr32 *r%x (@#%02x) <- r%x (#%02x)", rdest, vm->registers[rdest], rval, vm->registers[rval]);
-
-			uint32_t dest = vm->registers[rdest];
-			if (dest + 1 >= (uint32_t)vm->memory.len) {
-				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", dest, vm->memory.len);
+		CASE_2REG_INS(WR32, "*<-", {
+			if (r1 + 3 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (4 bytes); max memory is #%02lx", r1, vm->memory.len);
 				return false;
 			}
-
-			uint32_t val = vm->registers[rval];
-
+			uint32_t val = vm->registers[r2];
 			uint8_t b1 = (uint8_t)(val >> 24);
 			uint8_t b2 = (uint8_t)(val >> 16);
 			uint8_t b3 = (uint8_t)(val >> 8);
 			uint8_t b4 = (uint8_t)val;
-			vm->memory.ptr[dest] = b1;
-			vm->memory.ptr[dest+1] = b2;
-			vm->memory.ptr[dest+2] = b3;
-			vm->memory.ptr[dest+3] = b4;
-			break;
-		}
+			vm->memory.ptr[r1] = b1;
+			vm->memory.ptr[r1+1] = b2;
+			vm->memory.ptr[r1+2] = b3;
+			vm->memory.ptr[r1+3] = b4;
+		});
 
-		case CONQ_INS_RD8: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rsrc = CONQ_GET_ARG1(regs);
-			uint8_t rdest = CONQ_GET_ARG2(regs);
-
-			uint32_t src = vm->registers[rsrc];
-			logD("rd8 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
-
-			if (src >= (uint32_t)vm->memory.len) {
-				logD("address too big: got #%02lx; max memory is #%02lx", src, vm->memory.len);
+		CASE_2REG_INS(RD8, "->*", {
+			if (r1 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx; max memory is #%02lx", r1, vm->memory.len);
 				return false;
 			}
+			vm->registers[r2] = vm->memory.ptr[r1];
+		});
 
-			vm->registers[rdest] = vm->memory.ptr[src];
-			break;
-		}
-
-		case CONQ_INS_RD16: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rsrc = CONQ_GET_ARG1(regs);
-			uint8_t rdest = CONQ_GET_ARG2(regs);
-
-			uint32_t src = vm->registers[rsrc];
-			logD("rd16 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
-
-			if (src + 1 >= (uint32_t)vm->memory.len) {
-				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", src, vm->memory.len);
+		CASE_2REG_INS(RD16, "->*", {
+			if (r1 + 1 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (2 bytes); max memory is #%02lx", r1, vm->memory.len);
 				return false;
 			}
+			uint8_t b1 = vm->memory.ptr[r1];
+			uint8_t b2 = vm->memory.ptr[r1+1];
+			vm->registers[r2] = encodeU16(b1, b2);
+		});
 
-			uint8_t b1 = vm->memory.ptr[src];
-			uint8_t b2 = vm->memory.ptr[src+1];
-			vm->registers[rdest] = build16From8(b1, b2);
-
-			break;
-		}
-
-		case CONQ_INS_RD32: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rsrc = CONQ_GET_ARG1(regs);
-			uint8_t rdest = CONQ_GET_ARG2(regs);
-
-			uint32_t src = vm->registers[rsrc];
-			logD("rd32 *r%x (@#%02x) -> r%x (#%02x)", rsrc, src, rdest, vm->registers[rdest]);
-
-			if (src + 3 >= (uint32_t)vm->memory.len) {
-				logD("address too big: got #%02lx (4 bytes); max memory is #%02lx", src, vm->memory.len);
+		CASE_2REG_INS(RD32, "->*", {
+			if (r1 + 3 >= (uint32_t)vm->memory.len) {
+				logD("address too big: got #%02lx (4 bytes); max memory is #%02lx", r1, vm->memory.len);
 				return false;
 			}
+			uint8_t b1 = vm->memory.ptr[r1];
+			uint8_t b2 = vm->memory.ptr[r1+1];
+			uint8_t b3 = vm->memory.ptr[r1+2];
+			uint8_t b4 = vm->memory.ptr[r1+3];
+			vm->registers[r2] = encodeU32(b1, b2, b3, b4);
+		});
 
-			uint8_t b1 = vm->memory.ptr[src];
-			uint8_t b2 = vm->memory.ptr[src+1];
-			uint8_t b3 = vm->memory.ptr[src+2];
-			uint8_t b4 = vm->memory.ptr[src+3];
-			vm->registers[rdest] = build32From8(b1, b2, b3, b4);
-
-			break;
-		}
-
-		case CONQ_INS_ADD: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rop2 = CONQ_GET_ARG2(regs);
-
-			uint32_t op2 = vm->registers[rop2];
-			logD("add r%x (#%02x) += r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
-
-			/* FIXME: consistent overflow handling (right now it doesnt even do
-			   that, at all) */
-			vm->registers[rdest] += op2;
-			break;
-		}
-
-		case CONQ_INS_SUB: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rop2 = CONQ_GET_ARG2(regs);
-
-			uint32_t op2 = vm->registers[rop2];
-			logD("sub r%x (#%02x) -= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
-
-			/* FIXME: consistent overflow handling (right now it doesnt even do
-			   that, at all) */
-			vm->registers[rdest] -= op2;
-			break;
-		}
-
-		case CONQ_INS_DIV: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rop2 = CONQ_GET_ARG2(regs);
-
-			uint32_t op2 = vm->registers[rop2];
-			logD("div r%x (#%02x) /= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
-
-			/* FIXME: consistent overflow handling (right now it doesnt even do
-			   that, at all) */
-			vm->registers[rdest] /= op2;
-			break;
-		}
-
-		case CONQ_INS_MUL: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rop2 = CONQ_GET_ARG2(regs);
-
-			uint32_t op2 = vm->registers[rop2];
-			logD("mul r%x (#%02x) *= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
-
-			/* FIXME: consistent overflow handling (right now it doesnt even do
-			   that, at all) */
-			vm->registers[rdest] *= op2;
-			break;
-		}
-
-		case CONQ_INS_SHL: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rop2 = CONQ_GET_ARG2(regs);
-
-			uint32_t op2 = vm->registers[rop2];
-			logD("shl r%x (#%02x) <<= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
-
-			/* FIXME: consistent overflow handling (right now it doesnt even do
-			   that, at all) */
-			vm->registers[rdest] <<= op2;
-			break;
-		}
-
-		case CONQ_INS_SHR: {
-			uint8_t regs = getNextByte(vm);
-			uint8_t rdest = CONQ_GET_ARG1(regs);
-			uint8_t rop2 = CONQ_GET_ARG2(regs);
-
-			uint32_t op2 = vm->registers[rop2];
-			logD("shr r%x (#%02x) >>= r%x (#%02x)", rdest, vm->registers[rdest], rop2, op2);
-
-			/* FIXME: consistent overflow handling (right now it doesnt even do
-			   that, at all) */
-			vm->registers[rdest] >>= op2;
-			break;
-		}
+		CASE_2REG_INS(ADD, "+=", { vm->registers[r1] += vm->registers[r2]; });
+		CASE_2REG_INS(SUB, "-=", { vm->registers[r1] -= vm->registers[r2]; });
+		CASE_2REG_INS(MUL, "*=", { vm->registers[r1] *= vm->registers[r2]; });
+		CASE_2REG_INS(DIV, "/=", { vm->registers[r1] /= vm->registers[r2]; });
+		CASE_2REG_INS(SHL, "<<=", { vm->registers[r1] <<= vm->registers[r2]; });
+		CASE_2REG_INS(SHR, ">>=", { vm->registers[r1] >>= vm->registers[r2]; });
 
 		default:
 			logD("unknown instruction: %d", ins);
@@ -329,10 +203,10 @@ static uint8_t getNextByte(conq_VM *vm) {
 	return vm->memory.ptr[idx];
 }
 
-static uint32_t build32From8(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4) {
+static uint32_t encodeU32(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4) {
 	return ((uint32_t) b1 << 24) + ((uint32_t) b2 << 16) + ((uint32_t) b3 << 8) + (uint32_t) b4;
 }
 
-static uint32_t build16From8(uint8_t b1, uint8_t b2) {
+static uint32_t encodeU16(uint8_t b1, uint8_t b2) {
 	return ((uint32_t) b1 << 8) + (uint32_t) b2;
 }

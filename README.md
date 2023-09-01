@@ -15,7 +15,7 @@ See the [Standard](STANDARD.md)
 - [x] Initial API
 - [x] Implement pointer instructions
 - [x] Implement arithmetic instructions
-- [ ] Simplify assembler and interpreter codes (use macros to avoid repetition)
+- [x] Simplify assembler and interpreter codes (use macros to avoid repetition)
 - [ ] Implement device I/O
 - [ ] Implement common processor stuff
   - [ ] Timed interrupt (funky way to do multithreading, perhaps? - set
