@@ -32,21 +32,21 @@ typedef enum {
 	CONQ_INS_SHL,
 	CONQ_INS_SHR,
 
+	/* comparations */
+	CONQ_INS_EQ,
+	CONQ_INS_NEQ,
+	CONQ_INS_LT,
+	CONQ_INS_LEQ,
+	CONQ_INS_GT,
+	CONQ_INS_GEQ,
+
+	CONQ_INS_NOT,
+
 	/* debug instruction */
 	CONQ_INS_PRINT,
 
 	/* TODO: CONQ_INS_ASSERT */
 } conq_Instruction;
-
-/* these instructions change the leftmost bit of the flags register */
-/* TODO */
-/* #define CONQ_CMP_EQ */
-/* #define CONQ_CMP_L */
-/* #define CONQ_CMP_LE */
-/* #define CONQ_CMP_G */
-/* #define CONQ_CMP_GE */
-/* #define CONQ_CMP_NOT */
-/* #define CONQ_NOT */
 
 #define CONQ_R_INSPTR 6
 #define CONQ_R_FLAGS  7

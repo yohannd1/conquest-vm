@@ -46,9 +46,6 @@ int main(int argc, char *argv[]) {
 	if (!conq_VM_copyRom(&vm, conq_BufConst_from(rom))) {
 		die("failed to copy ROM to VM memory");
 	}
-	/* for (i = 0x100; i < 0x200; i++) { */
-	/* 	logD("rom[#%02x] = #%02x", i, vm.memory.ptr[i]); */
-	/* } */
 	if (!conq_VM_run(&vm)) die("VM exited with failure");
 
 	return 0;

@@ -57,4 +57,22 @@ SHR r0 r1
 PRINT r0
 */
 
+/* (TEST 6: EQ, NEQ) */
+/*
+LD32 r0 1
+LD32 r1 1
+EQ r0 r1
+PRINT r7
+NOT
+PRINT r7
+*/
+
+/* (TEST 6: LT, LEQ, GT, GEQ) */
+/*
+LD32 r0 50
+LD32 r1 50
+GEQ r0 r1
+PRINT r7
+*/
+
 BRK

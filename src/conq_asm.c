@@ -114,6 +114,9 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 			conq_Asm_write(asm, CONQ_INS_PRINT);
 			conq_Asm_write(asm, (reg & 0b111) << 5);
 		}
+		else if (stringEqN0(w, "NOT")) {
+			conq_Asm_write(asm, CONQ_INS_NOT);
+		}
 
 		/* pointers */
 		else TWO_ARG_ASM(WR8)
@@ -130,6 +133,14 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 		else TWO_ARG_ASM(MUL)
 		else TWO_ARG_ASM(SHL)
 		else TWO_ARG_ASM(SHR)
+
+		/* compare */
+		else TWO_ARG_ASM(EQ)
+		else TWO_ARG_ASM(NEQ)
+		else TWO_ARG_ASM(LT)
+		else TWO_ARG_ASM(LEQ)
+		else TWO_ARG_ASM(GT)
+		else TWO_ARG_ASM(GEQ)
 
 		else {
 			logD("line %d: unknown word: %.*s", asm->src_line, w.len, w.ptr);

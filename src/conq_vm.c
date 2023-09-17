@@ -60,6 +60,16 @@ bool conq_VM_copyRom(conq_VM *vm, conq_BufConst rom) {
 		break; \
 	}
 
+#define SETBIT(_number, _i, _newbit) (_number & ~(1<<_i)) | ((_newbit<<_i) & (1<<_i))
+#define GETBIT(_number, _i) (_number & (1<<_i))
+
+#define CASE_CMP_INS(insname, opsym, expr) \
+	CASE_2REG_INS(insname, opsym, { \
+		uint32_t *r = &vm->registers[CONQ_R_FLAGS]; \
+		uint32_t result = (expr) & 0b1; \
+		*r = SETBIT(*r, 0, result); \
+	})
+
 bool conq_VM_run(conq_VM *vm) {
 	for (;;) {
 		uint8_t ins = getNextByte(vm);
@@ -113,6 +123,15 @@ bool conq_VM_run(conq_VM *vm) {
 			uint8_t arg1 = GETREG_1(getNextByte(vm));
 			uint32_t r = vm->registers[arg1];
 			logD("r%x is %02d (#%02x)", arg1, r, r);
+			break;
+		}
+
+		case CONQ_INS_NOT: {
+			uint32_t *rf = &vm->registers[CONQ_R_FLAGS];
+			int oldbit = GETBIT(*rf, 0);
+			*rf = SETBIT(*rf, 0, !oldbit);
+
+			logD("NOT");
 			break;
 		}
 
@@ -188,6 +207,13 @@ bool conq_VM_run(conq_VM *vm) {
 		CASE_2REG_INS(DIV, "/=", { vm->registers[r1] /= vm->registers[r2]; });
 		CASE_2REG_INS(SHL, "<<=", { vm->registers[r1] <<= vm->registers[r2]; });
 		CASE_2REG_INS(SHR, ">>=", { vm->registers[r1] >>= vm->registers[r2]; });
+
+		CASE_CMP_INS(EQ, "==", vm->registers[r1] == vm->registers[r2]);
+		CASE_CMP_INS(NEQ, "!=", vm->registers[r1] != vm->registers[r2]);
+		CASE_CMP_INS(LT, "<", vm->registers[r1] < vm->registers[r2]);
+		CASE_CMP_INS(LEQ, "<=", vm->registers[r1] <= vm->registers[r2]);
+		CASE_CMP_INS(GT, ">", vm->registers[r1] > vm->registers[r2]);
+		CASE_CMP_INS(GEQ, ">=", vm->registers[r1] >= vm->registers[r2]);
 
 		default:
 			logD("unknown instruction: %d", ins);
