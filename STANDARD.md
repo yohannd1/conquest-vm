@@ -1,16 +1,18 @@
 # Conquest PC Standard
 
-## Init
+## Hardware specifications
 
-At the beginning, the first 64kb are read into memory, and the instruction pointer is set to 0x100 (256). Very similar to Uxn.
+- Processor is big endian (0xAABB = [0xAA, 0xBB])
+- Base model has 64KB of memory
+
+## Initialization
+
+The first 1KB is read into memory, and execution starts at 0x0000.
 
 ## Processor
 
 TODO: registers and their meanings
   TODO: probably upgrade to 16 registers instead of 8
-
-TODO: 0xAABBCCDD at @00 means that @00=AA, @01=BB, @02=CC, @03=DD (is
-this little or big endian?)
 
 ## Ports/Devices
 

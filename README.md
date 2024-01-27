@@ -34,6 +34,10 @@ See the [Standard](STANDARD.md)
       - if it's not in the dict, just add the Label entry
     - At the end of it all, if there's any label defs with no address in
       the list, error out with "use of undefined label"
+- [ ] Assembler : change syntax
+  - Sure, I like the funny whitespace-insensitive thing, but... I think
+    it hurts readability. It doesn't need this (if it were a forth it
+    would, but it isn't.)
 - [ ] Implement device I/O
 - [ ] Implement common processor stuff
   - [ ] Timed interrupt (funky way to do multithreading, perhaps? - set
