@@ -7,27 +7,27 @@
 static bool stringEqN0(conq_BufConst s1, const char *s2);
 static bool isWhitespace(uint8_t c);
 
-static conq_BufConst readWord(conq_Asm *asm);
-static bool readReg(conq_Asm *asm, uint8_t *dest);
-static bool readInt(conq_Asm *asm, uint32_t *dest);
+static conq_BufConst readWord(conq_Asm *asm_);
+static bool readReg(conq_Asm *asm_, uint8_t *dest);
+static bool readInt(conq_Asm *asm_, uint32_t *dest);
 
-static void conq_Asm_write(conq_Asm *asm, uint8_t byte);
+static void conq_Asm_write(conq_Asm *asm_, uint8_t byte);
 
 static const conq_BufConst ERRW_EOF = (conq_BufConst) { .ptr = (const uint8_t *) "EOF", .len = 3 };
 
-#define GETBYTE_REG(asm, regname) \
+#define GETBYTE_REG(asm_, regname) \
 	uint8_t regname; \
-	if (!readReg(asm, &regname)) return false;
+	if (!readReg(asm_, &regname)) return false;
 
-#define READ_INT(asm, ptr) \
-	if (!readInt(asm, ptr)) return false;
+#define READ_INT(asm_, ptr) \
+	if (!readInt(asm_, ptr)) return false;
 
 #define TWO_ARG_ASM(sym) \
 	if (stringEqN0(w, #sym)) { \
-		GETBYTE_REG(asm, rsrc); \
-		GETBYTE_REG(asm, rdest); \
-		conq_Asm_write(asm, CONQ_INS_ ##sym); \
-		conq_Asm_write(asm, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2)); \
+		GETBYTE_REG(asm_, rsrc); \
+		GETBYTE_REG(asm_, rdest); \
+		conq_Asm_write(asm_, CONQ_INS_ ##sym); \
+		conq_Asm_write(asm_, ((rsrc & 0b111) << 5) | ((rdest & 0b111) << 2)); \
 	}
 
 conq_Asm conq_Asm_init(conq_BufConst src) {
@@ -39,29 +39,29 @@ conq_Asm conq_Asm_init(conq_BufConst src) {
 	};
 }
 
-bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
+bool conq_Asm_compile(conq_Asm *asm_, conq_Buf *dest_rom) {
 	const size_t CHUNK_SIZE = 256;
-	asm->rom = (conq_Buf) { .ptr = NULL, .len = CHUNK_SIZE };
-	asm->rom.ptr = malloc(asm->rom.len * sizeof(uint8_t));
+	asm_->rom = (conq_Buf) { .ptr = NULL, .len = CHUNK_SIZE };
+	asm_->rom.ptr = malloc(asm_->rom.len * sizeof(uint8_t));
 
 	while (true) {
-		conq_BufConst w = readWord(asm);
+		conq_BufConst w = readWord(asm_);
 		if (w.ptr == NULL) break;
 
-		if (asm->rom_i >= asm->rom.len) {
-			asm->rom.len += CHUNK_SIZE;
-			asm->rom.ptr = realloc(asm->rom.ptr, asm->rom.len);
-			if (asm->rom.ptr == NULL) {
+		if (asm_->rom_i >= asm_->rom.len) {
+			asm_->rom.len += CHUNK_SIZE;
+			asm_->rom.ptr = realloc(asm_->rom.ptr, asm_->rom.len);
+			if (asm_->rom.ptr == NULL) {
 				logD("OOM");
 				return false;
 			}
 		}
 
 		if (stringEqN0(w, "BRK")) {
-			conq_Asm_write(asm, CONQ_INS_BRK);
+			conq_Asm_write(asm_, CONQ_INS_BRK);
 		} else if (stringEqN0(w, "/*")) {
 			while (true) {
-				w = readWord(asm);
+				w = readWord(asm_);
 				if (w.ptr == NULL) {
 					logD("missing */");
 					return false;
@@ -71,51 +71,51 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 				}
 			}
 		} else if (stringEqN0(w, "CPY")) {
-			GETBYTE_REG(asm, rdest);
-			GETBYTE_REG(asm, rval);
+			GETBYTE_REG(asm_, rdest);
+			GETBYTE_REG(asm_, rval);
 
-			conq_Asm_write(asm, CONQ_INS_CPY);
-			conq_Asm_write(asm, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
+			conq_Asm_write(asm_, CONQ_INS_CPY);
+			conq_Asm_write(asm_, ((rdest & 0b111) << 5) | ((rval & 0b111) << 2));
 		} else if (stringEqN0(w, "LD8")) {
-			GETBYTE_REG(asm, reg);
+			GETBYTE_REG(asm_, reg);
 
 			uint32_t n;
-			READ_INT(asm, &n);
+			READ_INT(asm_, &n);
 
-			conq_Asm_write(asm, CONQ_INS_LD8);
-			conq_Asm_write(asm, (reg & 0b111) << 5);
-			conq_Asm_write(asm, (uint8_t) n);
+			conq_Asm_write(asm_, CONQ_INS_LD8);
+			conq_Asm_write(asm_, (reg & 0b111) << 5);
+			conq_Asm_write(asm_, (uint8_t) n);
 		} else if (stringEqN0(w, "LD16")) {
-			GETBYTE_REG(asm, reg);
+			GETBYTE_REG(asm_, reg);
 
 			uint32_t n;
-			READ_INT(asm, &n);
+			READ_INT(asm_, &n);
 
-			conq_Asm_write(asm, CONQ_INS_LD16);
-			conq_Asm_write(asm, (reg & 0b111) << 5);
-			conq_Asm_write(asm, (uint8_t) (n >> 8));
-			conq_Asm_write(asm, (uint8_t) n);
+			conq_Asm_write(asm_, CONQ_INS_LD16);
+			conq_Asm_write(asm_, (reg & 0b111) << 5);
+			conq_Asm_write(asm_, (uint8_t) (n >> 8));
+			conq_Asm_write(asm_, (uint8_t) n);
 		} else if (stringEqN0(w, "LD32")) {
-			GETBYTE_REG(asm, reg);
+			GETBYTE_REG(asm_, reg);
 
 			uint32_t n;
-			READ_INT(asm, &n);
+			READ_INT(asm_, &n);
 
-			conq_Asm_write(asm, CONQ_INS_LD32);
-			conq_Asm_write(asm, (reg & 0b111) << 5);
-			conq_Asm_write(asm, (uint8_t) (n >> 24));
-			conq_Asm_write(asm, (uint8_t) (n >> 16));
-			conq_Asm_write(asm, (uint8_t) (n >> 8));
-			conq_Asm_write(asm, (uint8_t) n);
+			conq_Asm_write(asm_, CONQ_INS_LD32);
+			conq_Asm_write(asm_, (reg & 0b111) << 5);
+			conq_Asm_write(asm_, (uint8_t) (n >> 24));
+			conq_Asm_write(asm_, (uint8_t) (n >> 16));
+			conq_Asm_write(asm_, (uint8_t) (n >> 8));
+			conq_Asm_write(asm_, (uint8_t) n);
 		}
 		else if (stringEqN0(w, "PRINT")) {
-			GETBYTE_REG(asm, reg);
+			GETBYTE_REG(asm_, reg);
 
-			conq_Asm_write(asm, CONQ_INS_PRINT);
-			conq_Asm_write(asm, (reg & 0b111) << 5);
+			conq_Asm_write(asm_, CONQ_INS_PRINT);
+			conq_Asm_write(asm_, (reg & 0b111) << 5);
 		}
 		else if (stringEqN0(w, "NOT")) {
-			conq_Asm_write(asm, CONQ_INS_NOT);
+			conq_Asm_write(asm_, CONQ_INS_NOT);
 		}
 
 		/* pointers */
@@ -143,37 +143,37 @@ bool conq_Asm_compile(conq_Asm *asm, conq_Buf *dest_rom) {
 		else TWO_ARG_ASM(GEQ)
 
 		else {
-			logD("line %d: unknown word: %.*s", asm->src_line, w.len, w.ptr);
+			logD("line %d: unknown word: %.*s", asm_->src_line, w.len, w.ptr);
 			return false;
 		}
 	}
 
 	/* try to tighten memory but it's not critical, as `len` is tight already. */
-	uint8_t *tighter = realloc(asm->rom.ptr, asm->rom.len);
-	if (tighter != NULL) asm->rom.ptr = tighter;
+	uint8_t *tighter = realloc(asm_->rom.ptr, asm_->rom.len);
+	if (tighter != NULL) asm_->rom.ptr = tighter;
 
-	*dest_rom = asm->rom;
+	*dest_rom = asm_->rom;
 	return true;
 }
 
-static conq_BufConst readWord(conq_Asm *asm) {
+static conq_BufConst readWord(conq_Asm *asm_) {
 	/* skip whitespace and count lines */
-	for (; asm->src_i < asm->src.len; asm->src_i += 1) {
-		char c = asm->src.ptr[asm->src_i];
-		if (c == '\n') asm->src_line += 1;
+	for (; asm_->src_i < asm_->src.len; asm_->src_i += 1) {
+		char c = asm_->src.ptr[asm_->src_i];
+		if (c == '\n') asm_->src_line += 1;
 		if (isWhitespace(c)) continue;
 		break;
 	}
 
 	/* count word chars */
-	size_t start = asm->src_i;
-	for (; !isWhitespace(asm->src.ptr[asm->src_i]) && asm->src_i < asm->src.len;
-	     asm->src_i += 1)
+	size_t start = asm_->src_i;
+	for (; !isWhitespace(asm_->src.ptr[asm_->src_i]) && asm_->src_i < asm_->src.len;
+	     asm_->src_i += 1)
 		;
 
-	return (start == asm->src_i)
+	return (start == asm_->src_i)
 		   ? (conq_BufConst) { .ptr = NULL, .len = 0 }
-		   : (conq_BufConst) { .ptr = &asm->src.ptr[start], .len = asm->src_i - start };
+		   : (conq_BufConst) { .ptr = &asm_->src.ptr[start], .len = asm_->src_i - start };
 }
 
 static bool stringEqN0(conq_BufConst s1, const char *s2) {
@@ -190,8 +190,8 @@ static bool isWhitespace(uint8_t c) {
 	return (c == ' ' || c == '\t' || c == '\n' || c == '\r');
 }
 
-static bool readReg(conq_Asm *asm, uint8_t *dest) {
-	conq_BufConst w = readWord(asm);
+static bool readReg(conq_Asm *asm_, uint8_t *dest) {
+	conq_BufConst w = readWord(asm_);
 	if (w.ptr == NULL) {
 		w = ERRW_EOF;
 		goto error;
@@ -208,8 +208,8 @@ error:
 	return false;
 }
 
-static bool readInt(conq_Asm *asm, uint32_t *dest) {
-	conq_BufConst w = readWord(asm);
+static bool readInt(conq_Asm *asm_, uint32_t *dest) {
+	conq_BufConst w = readWord(asm_);
 	if (w.ptr == NULL) {
 		w = ERRW_EOF;
 		goto error;
@@ -252,7 +252,7 @@ error:
 	return false;
 }
 
-static void conq_Asm_write(conq_Asm *asm, uint8_t byte) {
-	asm->rom.ptr[asm->rom_i] = byte;
-	asm->rom_i++;
+static void conq_Asm_write(conq_Asm *asm_, uint8_t byte) {
+	asm_->rom.ptr[asm_->rom_i] = byte;
+	asm_->rom_i++;
 }

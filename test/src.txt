@@ -68,11 +68,9 @@ PRINT r7
 */
 
 /* (TEST 6: LT, LEQ, GT, GEQ) */
-/*
 LD32 r0 50
 LD32 r1 50
 GEQ r0 r1
 PRINT r7
-*/
 
 BRK

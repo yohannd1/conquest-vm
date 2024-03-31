@@ -36,8 +36,8 @@ int main(int argc, char *argv[]) {
 	fclose(fp);
 
 	conq_Buf rom;
-	conq_Asm asm = conq_Asm_init(conq_BufConst_from(fbuf));
-	if (!conq_Asm_compile(&asm, &rom)) {
+	conq_Asm asm_ = conq_Asm_init(conq_BufConst_from(fbuf));
+	if (!conq_Asm_compile(&asm_, &rom)) {
 		die("failed to compile to ROM");
 	}
 
