@@ -1,0 +1,10 @@
+[package]
+name = "conq"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[[bin]]
+name = "conq"
+path = "src/main.rs"

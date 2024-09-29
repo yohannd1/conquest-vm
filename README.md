@@ -44,7 +44,7 @@ See the [Standard](STANDARD.md)
     up an interrupt to run every n cycles - a multiple of 32 i think, so
     i can fit it in an uint32)
   - [ ] Search more about common types of interrupts
-  - [ ] Which clock? 4MHz? 8? 16? 32? 64 is probably too much...
+  - [ ] Which clock? set modes for 5, 10 and 20MHz I think
 - [ ] Implement relative jumps (taking an i8 or i16, I believe!)
 - [ ] Relative jump optimizations
 - [ ] Graphics (using SDL)
