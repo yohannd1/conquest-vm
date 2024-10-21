@@ -33,9 +33,12 @@ pub fn compile(src: &str) -> Result<Vec<u8>, String> {
             },
 
             "BRK" => bytecode.extend_from_slice(&[Instruction::Brk as u8]), // stop VM
-            "CPY" => todo!(),   // copy the value of one register to another
-            "JMPIF" => todo!(), // increase PC by ARG1 if bool flag is true
-            // TODO: JMP (for unconditional jump)
+
+            // copy the value of one register to another
+            "CPY" => extend_2reg(&mut bytecode, &mut p, Instruction::Cpy)?,
+
+            // TODO: JMPIF
+            // TODO: JMP
 
             // load (constant into register)
             "LD8" => {
@@ -85,7 +88,7 @@ pub fn compile(src: &str) -> Result<Vec<u8>, String> {
             "GT" => extend_2reg(&mut bytecode, &mut p, Instruction::Gt)?,
             "GEQ" => extend_2reg(&mut bytecode, &mut p, Instruction::Geq)?,
 
-            "NOT" => todo!(),
+            "NOT" => extend(&mut bytecode, Instruction::Not, &[]),
 
             // debug
             "PRINT" => {

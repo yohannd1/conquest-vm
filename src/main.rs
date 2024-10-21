@@ -34,7 +34,7 @@ fn run() -> Result<(), String> {
 
     let mut vm = Vm::new(0x1000);
     vm.load_rom(&compiled, 0x100);
-    vm.run();
+    vm.run()?;
 
     Ok(())
 }
